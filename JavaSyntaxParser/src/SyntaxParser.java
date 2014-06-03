@@ -288,7 +288,7 @@ public class SyntaxParser {
 			
 			if(nextString.equals("[")) {
 				do {
-					nextString = parseCloseBracket(sc);
+					nextString = handleCloseBracket(sc);
 				} while(nextString != null && nextString.equals("["));
 				VariableInfo.setType(VariableInfo.getType() + " array");
 			}
@@ -345,7 +345,7 @@ public class SyntaxParser {
 		String nextString = currString;
 		if(nextString.equals("[")) {
 			do {
-				nextString = parseCloseBracket(sc);
+				nextString = handleCloseBracket(sc);
 			} while(nextString != null && nextString.equals("["));
 			
 			isArray = true;
@@ -369,7 +369,7 @@ public class SyntaxParser {
 		return nextString;
 	}
 	
-	private static String parseCloseBracket(Scanner sc) {
+	private static String handleCloseBracket(Scanner sc) {
 		if(sc.hasNext() && sc.next().equals("]")) {
 			if(sc.hasNext()) {
 				return sc.next();
@@ -380,6 +380,24 @@ public class SyntaxParser {
 		}
 		else {
 			appendOutputString("Missing \']\'\n");
+			return null;
+		}
+	}
+	
+	private static String handleCloseBracket2(Scanner sc) {
+		String nextString;
+		if((nextString = getNextString(sc)) != null && 
+				Character.isDigit(nextString.charAt(0))) {
+			if((nextString = getNextString(sc)) != null && nextString.equals("]")) {
+				return getNextString(sc);
+			}
+			else {
+				appendOutputString("Missing \']\'\n");
+				return null;
+			}
+		}
+		else {
+			appendOutputString("Missing array index\n");
 			return null;
 		}
 	}
@@ -442,7 +460,10 @@ public class SyntaxParser {
 		
 		do {
 			nextString = parseStatement(sc, nextString);
-		} while(statementHeaderList.contains(nextString));
+		} while(nextString != null && (statementHeaderList.contains(nextString) || 
+				basicTypeList.contains(nextString) ||
+				prefixOpList.contains(nextString) ||
+				Character.isAlphabetic(nextString.charAt(0))));
 		
 		return nextString;
 	}
@@ -475,21 +496,9 @@ public class SyntaxParser {
 				nextString = handleReturnStatement(sc);
 				break;
 			default:
-				appendOutputString("Invalid statement\n" + nextString + "\n");
-				return null;
+				nextString = handleStatementExpression(sc, nextString);
 		}
 		return nextString;
-	}
-	
-	private static String handleParExpression(Scanner sc) {
-		String nextString;
-		if((nextString = getNextString(sc)) != null && nextString.equals("(")) {
-			return parseExpression(sc, getNextString(sc));
-		}
-		else {
-			appendOutputString("Missing '('\n");
-			return null;
-		}
 	}
 	
 	private static String handleIfStatement(Scanner sc) {
@@ -505,6 +514,17 @@ public class SyntaxParser {
 		}
 		else {
 			appendOutputString("Missing \')\'\n");
+			return null;
+		}
+	}
+	
+	private static String handleParExpression(Scanner sc) {
+		String nextString;
+		if((nextString = getNextString(sc)) != null && nextString.equals("(")) {
+			return parseExpression(sc, getNextString(sc));
+		}
+		else {
+			appendOutputString("Missing '('\n");
 			return null;
 		}
 	}
@@ -614,6 +634,18 @@ public class SyntaxParser {
 		}
 	}
 	
+	private static String handleStatementExpression(Scanner sc, String currString) {
+		String nextString = currString;
+		if((nextString = parseExpression(sc, nextString)) != null && 
+				nextString.equals(";")) {
+			return getNextString(sc);
+		}
+		else {
+			appendOutputString("Missing \';\'\n");
+			return null;
+		}
+	}
+	
 	private static String parseExpression(Scanner sc, String currString) {
 		String nextString = currString;
 		if((nextString = parseExpression2(sc, nextString)) == null) {
@@ -640,6 +672,9 @@ public class SyntaxParser {
 		
 		if(infixOpList.contains(nextString)) {
 			do {
+				if((nextString = getNextString(sc)) == null) {
+					return null;
+				}
 				nextString = parseExpression3(sc, nextString);
 			} while(nextString != null && infixOpList.contains(nextString));
 			return nextString;
@@ -668,17 +703,43 @@ public class SyntaxParser {
 			return parseExpression3(sc, nextString);
 		}
 		
-		VariableInfo.valueSB.append(nextString);
-		if((nextString = getNextString(sc)) == null) {
-			return null;
-		}
-		
-		if(postfixOpList.contains(nextString)) {
-			return getNextString(sc);
+		if(nextString != null && (Character.isAlphabetic(nextString.charAt(0)) ||
+				Character.isDigit(nextString.charAt(0)))) {
+			VariableInfo.valueSB.append(nextString);
+			return handlePostExpression3(sc);
 		}
 		else {
 			return nextString;
 		}
+	}
+	
+	private static String handlePostExpression3(Scanner sc) {
+		String nextString;
+		if((nextString = getNextString(sc)) == null) {
+			return null;
+		}
+		
+		if(nextString.equals("[")) {
+			do {
+				nextString = handleCloseBracket2(sc);
+			} while(nextString != null && nextString.equals("["));
+		}
+		
+		if(nextString.equals(".")) {
+			do {
+				if((nextString = getNextString(sc)) != null && 
+						(Character.isAlphabetic(nextString.charAt(0)))) {
+					VariableInfo.valueSB.append(nextString);
+					nextString = getNextString(sc);
+				}
+			} while(nextString != null && nextString.equals("."));
+		}
+		
+		if(postfixOpList.contains(nextString)) {
+			nextString = getNextString(sc);
+		}
+		
+		return nextString;
 	}
 	
 	private static void appendOutputString(String s) {

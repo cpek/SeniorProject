@@ -16,7 +16,9 @@ Type: double
 Class variable: c
 Value: 1.2
 
-Constructor name: POJO
+Modifier: private
+Type: int
+Method name: method1
 
 Type: int array
 Parameter variable: a1
