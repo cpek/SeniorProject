@@ -1,51 +1,30 @@
 Modifier: public
-Class Name: POJO
+Class Name: Rectangle
 
 Modifier: private
-Type: int array
-Variable: a
-Value: {3, 4, 5}
+Type: int
+Class variable: width
+Value: 
 
 Modifier: private
-Type: double
-Variable: b
-Value: 0
+Type: int
+Class variable: length
+Value: 
 
 Modifier: private
-Type: double
-Variable: c
-Value: 1.2
+Type: int
+Class variable: area
+Value: 
 
-Constructor name: POJO
+Constructor name: Rectangle
 
-Type: int array
-Parameter variable: a1
+Type: int
+Parameter variable: width
 
-Type: double
-Parameter variable: b1
-
-Type: double
-Parameter variable: c1
-
-Modifier: private
-Class Name: InnerPOJO
+Type: int
+Parameter variable: length
 
 Modifier: public
-Type: double
-Method name: calculateSum
+Type: int
+Method name: getArea
 
-Modifier: public
-Type: boolean
-Variable: t
-Value: true
-
-Modifier: public
-Type: boolean
-Variable: f
-Value: false
-
-return: 0.1
-
-"while" keyword not found
-Missing '}'
-Missing '}'
