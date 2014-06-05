@@ -32,7 +32,9 @@ public class SyntaxParser {
 	
 	public static String parseTypeDeclaration(BufferedReader br) {
 		outputSB = new StringBuilder();
+		outputSB.append("<pre>");
 		parseClassOrInterfaceDeclaration(br);
+		outputSB.append("</pre>");
 		return outputSB.toString();
 	}
 	
@@ -82,8 +84,11 @@ public class SyntaxParser {
 	}
 	
 	private static String parseClassBody(BufferedReader br) {
-		String nextString = parseClassBodyDeclaration(br);
-		if(nextString != null && nextString.equals("}")) {
+		String nextString;
+		if((nextString = parseClassBodyDeclaration(br)) == null) {
+			return null;
+		}
+		if(nextString.equals("}")) {
 			outputSB.append(nextString);
 			return getNextToken(br);
 		}
@@ -101,14 +106,13 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
 			if(nextString.equals("}")) {
-				outputSB.append(nextString);
 				return nextString;
 			}
 			
 			do {
 				nextString = parseModifiers(br, nextString);
 				if(basicTypeList.contains(nextString)) {
-					outputSB.append(nextString);
+					outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 					nextString = parseMethodOrFieldDecl(br);
 				}
 				else if(coiHeaderList.contains(nextString)) {
@@ -238,7 +242,7 @@ public class SyntaxParser {
 	private static String parseFormalParameterDecls(BufferedReader br, String currString) {
 		String nextString = currString;
 		if(basicTypeList.contains(nextString)) {
-			outputSB.append(nextString);
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 			return parseFormalParameterDeclsRest(br);
 		}
 		else {
@@ -657,7 +661,7 @@ public class SyntaxParser {
 			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) != null && 
 					basicTypeList.contains(nextString)) {
-				outputSB.append(nextString);
+				outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 				return getNextToken(br);
 			}
 			else {
@@ -673,7 +677,12 @@ public class SyntaxParser {
 	private static String parseExpression3(BufferedReader br, String currString) {
 		String nextString = currString;
 		if(prefixOpList.contains(nextString) || basicTypeList.contains(nextString)) {
-			outputSB.append(nextString);
+			if(basicTypeList.contains(nextString)) {
+				outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			}
+			else {
+				outputSB.append(nextString);
+			}
 			if((nextString = getNextToken(br)) == null) {
 				return null;
 			}
@@ -736,6 +745,10 @@ public class SyntaxParser {
 			}
 			else {
 				value = br.read();
+			}
+			
+			if(value == -1) {
+				return null;
 			}
 			
 			if(Character.isWhitespace(value)) {				
