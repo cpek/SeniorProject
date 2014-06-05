@@ -32,19 +32,10 @@ public class MainActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		int id = item.getItemId();
-		String code;
-		
+		int id = item.getItemId();		
 		switch(id) {
-			case R.id.undo:
-				code = editor.getText().toString();
-				loadSavedPreferences();
-				savePreferences(code);
-				break;
-			case R.id.redo:
-				code = editor.getText().toString();
-				loadSavedPreferences();
-				savePreferences(code);
+			case R.id.save:
+				savePreferences(editor.getText().toString());
 				break;
 			case R.id.compile:
 				UpdateEditor(editor.getText().toString());
@@ -53,10 +44,10 @@ public class MainActivity extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	private void savePreferences(String value) {
+	private void savePreferences(String code) {
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		Editor editor = pref.edit();
-		editor.putString("code", value);
+		editor.putString("code", code);
 		editor.commit();
 	}
 	
@@ -70,11 +61,9 @@ public class MainActivity extends ActionBarActivity {
 	}
 	
 	private void UpdateEditor(String code) {
-		savePreferences(code);
-		
 		BufferedReader br = new BufferedReader(new StringReader(code));
 		code = SyntaxParser.parseTypeDeclaration(br);
-		
 		editor.setText(Html.fromHtml(code));
+		savePreferences(code);
 	}
 }

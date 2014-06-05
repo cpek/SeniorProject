@@ -33,7 +33,11 @@ public class SyntaxParser {
 	public static String parseTypeDeclaration(BufferedReader br) {
 		outputSB = new StringBuilder();
 		outputSB.append("<pre>");
-		parseClassOrInterfaceDeclaration(br);
+		
+		if(parseClassOrInterfaceDeclaration(br) == null) {
+			appendRest(br);
+		}
+		
 		outputSB.append("</pre>");
 		return outputSB.toString();
 	}
@@ -90,7 +94,7 @@ public class SyntaxParser {
 		}
 		if(nextString.equals("}")) {
 			outputSB.append(nextString);
-			return getNextToken(br);
+			return nextString;
 		}
 		else {
 			outputSB.append("<font color=red>" + nextString + "</font>");
@@ -411,6 +415,10 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) == null) {
 			return null;
+		}
+		
+		if(nextString.equals("}")) {
+			return nextString;
 		}
 		
 		do {
@@ -804,5 +812,24 @@ public class SyntaxParser {
       }
 		
 		return sb.toString();
+	}
+	
+	private static void appendRest(BufferedReader br) {
+		int value;
+		char ch;
+		try {
+			outputSB.append(' ');
+	      while((value = br.read()) != -1) {
+	      	ch = (char)value;
+	      	if(ch == '\n') {
+	      		outputSB.append("<br />");
+	      	}
+	      	else {
+	      		outputSB.append((char)value);
+	      	}
+	      }
+      } catch (IOException e) {
+	      e.printStackTrace();
+      }
 	}
 }
