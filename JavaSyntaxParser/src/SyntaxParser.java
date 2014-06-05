@@ -1,3 +1,5 @@
+package edu.calpoly.halicej;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
@@ -25,36 +27,6 @@ public class SyntaxParser {
 	private static List<Character> spCharList2 = Arrays.asList(new Character[] {
 			'+', '-', '*', '/', '%', '<', '>', '!', '^', '=', '|', '&'});
 	
-	private static class VariableInfo {
-		private static String modifier = "";
-		private static String type = "";
-		private static String name = "";
-		private static StringBuilder valueSB = new StringBuilder();
-		
-		private static void setModifier(String newModifier) {
-			modifier = newModifier;
-		}
-		private static void setType(String newType) {
-			type = newType;
-		}
-		private static void setName(String newName) {
-			name = newName;
-		}
-		private static String getModifier() {
-			return modifier;
-		}
-		private static String getType() {
-			return type;
-		}
-		private static String getName() {
-			return name;
-		}
-		private static void clear() {
-			name = "";
-			valueSB = new StringBuilder();
-		}
-	}
-	
 	private static StringBuilder outputSB;
 	private static char currentChar = 0;
 	
@@ -68,49 +40,43 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
 			if(modifierList.contains(nextString)) {
-				VariableInfo.setModifier(nextString);
+				outputSB.append("<font color=purple>" + nextString + "</font>");
 				nextString = getNextToken(br);
 			}
 			if(nextString.equals("class")) {
+				outputSB.append("<font color=purple>" + nextString + "</font>");
 				return parseNormalClassDeclaration(br);
 			}
 			else {
-				appendOutputString("Invalid declaration keyword\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Class or interface not found\n");
 			return null;
 		}
 	}
 	
 	private static String parseNormalClassDeclaration(BufferedReader br) {
 		String nextString;
-		if((nextString = getNextToken(br)) != null) {
-			VariableInfo.setName(nextString);
-			
-			appendOutputString("Modifier: " + VariableInfo.getModifier() + "\n");
-			appendOutputString("Class Name: " + VariableInfo.getName() + "\n\n");
-			VariableInfo.clear();
-			
+		if((nextString = getNextToken(br)) != null) {			
+			outputSB.append(nextString);
 			
 			if((nextString = getNextToken(br)) != null) {
 				if(nextString.equals("{")) {
+					outputSB.append(nextString);
 					return parseClassBody(br);
 				}
 				else {
-					appendOutputString("Missing \'{\'\n");
+					outputSB.append("<font color=red>" + nextString + "</font>");
 					return null;
 				}
 			}
 			else {
-				appendOutputString("Class body not found\n");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Class name not found\n");
 			return null;
 		}
 	}
@@ -118,10 +84,11 @@ public class SyntaxParser {
 	private static String parseClassBody(BufferedReader br) {
 		String nextString = parseClassBodyDeclaration(br);
 		if(nextString != null && nextString.equals("}")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \'}\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -134,20 +101,22 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
 			if(nextString.equals("}")) {
+				outputSB.append(nextString);
 				return nextString;
 			}
 			
 			do {
 				nextString = parseModifiers(br, nextString);
 				if(basicTypeList.contains(nextString)) {
-					VariableInfo.setType(nextString);
+					outputSB.append(nextString);
 					nextString = parseMethodOrFieldDecl(br);
 				}
 				else if(coiHeaderList.contains(nextString)) {
+					outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 					nextString = parseNormalClassDeclaration(br);
 				}
 				else {
-					VariableInfo.setName(nextString);
+					outputSB.append(nextString);
 					nextString = parseConstructorDeclaratorRest(br);
 				}
 			} while(nextString != null && !nextString.equals("}"));
@@ -155,7 +124,6 @@ public class SyntaxParser {
 			return nextString;
 		}
 		else {
-			appendOutputString("Missing \'}\'\n");
 			return null;
 		}
 	}
@@ -163,22 +131,21 @@ public class SyntaxParser {
 	private static String parseModifiers(BufferedReader br, String nextString) {
 		try {
 			if(modifierList.contains(nextString)) {
-				VariableInfo.setModifier(nextString);
+				outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 				nextString = getNextToken(br);
 			}
-			else {
-				VariableInfo.setModifier("private");
-			}
 			if(nextString.equals("static")) {
+				outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 				nextString = getNextToken(br);
 			}
 			if(nextString.equals("final")) {
+				outputSB.append("<font color=\"purple\">" + nextString + "</font>");
 				nextString = getNextToken(br);
 			}
 			return nextString;
 		}
 		catch(NoSuchElementException e) {
-			appendOutputString("Incomplete member declaration\n");
+			outputSB.append("Incomplete member declaration\n");
 			return null;
 		}
 	}
@@ -186,11 +153,11 @@ public class SyntaxParser {
 	private static String parseMethodOrFieldDecl(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
-			VariableInfo.setName(nextString);
+			outputSB.append(nextString);
 			return parseMethodOrFieldRest(br);
 		}
 		else {
-			appendOutputString("Incomplete method or field declaration\n");
+			outputSB.append("Incomplete method or field declaration\n");
 			return null;
 		}
 	}
@@ -199,15 +166,17 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
 			if(nextString.equals("(")) {
+				outputSB.append(nextString);
 				return parseMethodDeclaratorRest(br);
 			}
 			else {
 				nextString = parseFieldDeclaratorsRest(br, nextString);
 				if(nextString != null && nextString.equals(";")) {
+					outputSB.append(nextString);
 					return getNextToken(br);
 				}
 				else {
-					appendOutputString("Missing \';\'\n");
+					outputSB.append("<font color=red>" + nextString + "</font>");
 					return null;
 				}
 			}
@@ -218,10 +187,10 @@ public class SyntaxParser {
 	}
 	
 	private static String parseMethodDeclaratorRest(BufferedReader br) {
-		appendOutputString("Modifier: " + VariableInfo.getModifier() + "\n");
-		appendOutputString("Type: " + VariableInfo.getType() + "\n");
-		appendOutputString("Method name: " + VariableInfo.getName() + "\n\n");
-		VariableInfo.clear();
+		/*outputSB.append("Modifier: " + VariableInfo.getModifier() + "\n");
+		outputSB.append("Type: " + VariableInfo.getType() + "\n");
+		outputSB.append("Method name: " + VariableInfo.getName() + "\n\n");
+		VariableInfo.clear();*/
 		
 		String nextString = parseFormalParameters(br);
 		return parseStatementHandler(br, nextString);
@@ -230,16 +199,18 @@ public class SyntaxParser {
 	private static String parseStatementHandler(BufferedReader br, String currString) {
 		String nextString = currString;
 		if(nextString != null && nextString.equals("{")) {
+			outputSB.append(nextString);
 			if((nextString = parseStatements(br)) != null && nextString.equals("}")) {
+				outputSB.append(nextString);
 				return getNextToken(br);
 			}
 			else {
-				appendOutputString("Missing \'}\'\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Missing \'{\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -250,15 +221,16 @@ public class SyntaxParser {
 			if(nextString.equals(")") || 
 			  ((nextString = parseFormalParameterDecls(br, nextString)) != null && 
 			    nextString.equals(")"))) {
+				outputSB.append(nextString);
 				return getNextToken(br);
 			}
 			else {
-				appendOutputString("Missing \')\'\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Missing \')\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -266,11 +238,11 @@ public class SyntaxParser {
 	private static String parseFormalParameterDecls(BufferedReader br, String currString) {
 		String nextString = currString;
 		if(basicTypeList.contains(nextString)) {
-			VariableInfo.setType(nextString);
+			outputSB.append(nextString);
 			return parseFormalParameterDeclsRest(br);
 		}
 		else {
-			appendOutputString("Parameter type not found\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -278,7 +250,7 @@ public class SyntaxParser {
 	private static String parseFormalParameterDeclsRest(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
-			VariableInfo.setName(nextString);
+			outputSB.append(nextString);
 			
 			if((nextString = getNextToken(br)) == null) {
 				return null;
@@ -286,16 +258,13 @@ public class SyntaxParser {
 			
 			if(nextString.equals("[")) {
 				do {
+					outputSB.append(nextString);
 					nextString = handleCloseBracket(br);
 				} while(nextString != null && nextString.equals("["));
-				VariableInfo.setType(VariableInfo.getType() + " array");
 			}
 			
-			appendOutputString("Type: " + VariableInfo.getType() + "\n");
-			appendOutputString("Parameter variable: " + VariableInfo.getName() + "\n\n");
-			VariableInfo.clear();
-			
 			if(nextString.equals(",")) {
+				outputSB.append(nextString);
 				if((nextString = getNextToken(br)) == null) {
 					return null;
 				}
@@ -308,7 +277,7 @@ public class SyntaxParser {
 			}
 		}
 		else {
-			appendOutputString("Variable not found\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -316,6 +285,7 @@ public class SyntaxParser {
 	private static String parseFieldDeclaratorsRest(BufferedReader br, String currString) {
 		String nextString = parseVariableDeclaratorRest(br, currString);
 		while(nextString != null && nextString.equals(",")) {
+			outputSB.append(nextString);
 			nextString = parseVariableDeclarator(br);
 		}
 		return nextString;
@@ -324,7 +294,7 @@ public class SyntaxParser {
 	private static String parseVariableDeclarator(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null) {
-			VariableInfo.setName(nextString);
+			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) != null) {
 				return parseVariableDeclaratorRest(br, nextString);
 			}
@@ -333,37 +303,24 @@ public class SyntaxParser {
 			}
 		}
 		else {
-			appendOutputString("Variable identifier not found\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
 	
-	private static String parseVariableDeclaratorRest(BufferedReader br, String currString) {
-		boolean isArray = false;
-		
+	private static String parseVariableDeclaratorRest(BufferedReader br, String currString) {		
 		String nextString = currString;
 		if(nextString.equals("[")) {
 			do {
+				outputSB.append(nextString);
 				nextString = handleCloseBracket(br);
 			} while(nextString != null && nextString.equals("["));
-			
-			isArray = true;
 		}
 		
 		if(nextString != null && nextString.equals("=")) {
+			outputSB.append(nextString);
 			nextString = parseVariableInitializer(br);
 		}
-		
-		appendOutputString("Modifier: " + VariableInfo.getModifier() + "\n");
-		if(isArray) {
-			appendOutputString("Type: " + VariableInfo.getType() + " array\n");
-		}
-		else {
-			appendOutputString("Type: " + VariableInfo.getType() + "\n");
-		}
-		appendOutputString("Class variable: " + VariableInfo.getName() + "\n");
-		appendOutputString("Value: " + VariableInfo.valueSB.toString() + "\n\n");
-		VariableInfo.clear();
 		
 		return nextString;
 	}
@@ -371,10 +328,11 @@ public class SyntaxParser {
 	private static String handleCloseBracket(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals("]")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \']\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -383,16 +341,18 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && 
 				Character.isDigit(nextString.charAt(0))) {
+			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) != null && nextString.equals("]")) {
+				outputSB.append(nextString);
 				return getNextToken(br);
 			}
 			else {
-				appendOutputString("Missing \']\'\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Missing array index\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -400,11 +360,11 @@ public class SyntaxParser {
 	private static String parseVariableInitializer(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) == null) {
-			appendOutputString("Literal not found");
 			return null;
 		}
 		
 		if(nextString.equals("{")) {
+			outputSB.append(nextString);
 			return parseArrayInitializer(br);
 		}
 		else {
@@ -413,35 +373,32 @@ public class SyntaxParser {
 	}
 	
 	private static String parseArrayInitializer(BufferedReader br) {
-		VariableInfo.valueSB.append("{");
 		String nextString = parseVariableInitializer(br);
 		
 		while(nextString.equals(",")) {
-			VariableInfo.valueSB.append(", ");
+			outputSB.append(nextString);
 			nextString = parseVariableInitializer(br);
 		}
 		
 		if(nextString.equals("}")) {
-			VariableInfo.valueSB.append("}");
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \'}\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
 	
 	private static String parseConstructorDeclaratorRest(BufferedReader br) {
-		appendOutputString("Constructor name: " + VariableInfo.getName() + "\n\n");
-		VariableInfo.clear();
-		
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals("(")) {
+			outputSB.append(nextString);
 			nextString = parseFormalParameters(br);
 			return parseStatementHandler(br, nextString);
 		}
 		else {
-			appendOutputString("Missing \'(\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -449,7 +406,6 @@ public class SyntaxParser {
 	private static String parseStatements(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) == null) {
-			appendOutputString("Block statement not found");
 			return null;
 		}
 		
@@ -458,40 +414,47 @@ public class SyntaxParser {
 		} while(nextString != null && (statementHeaderList.contains(nextString) || 
 				basicTypeList.contains(nextString) ||
 				prefixOpList.contains(nextString) ||
-				Character.isAlphabetic(nextString.charAt(0))));
+				Character.isLetter(nextString.charAt(0))));
 		
 		return nextString;
 	}
 	
 	private static String parseStatement(BufferedReader br, String currString) {
 		String nextString = currString;
-		switch(nextString) {
-			case ";":
-				nextString = getNextToken(br);
-				break;
-			case "if":
-				nextString = handleIfStatement(br);
-				break;
-			case "while":
-				nextString = handleWhileStatement(br);
-				break;
-			case "do":
-				nextString = handleDoStatement(br);
-				break;
-			case "for":
-				nextString = handleForStatement(br);
-				break;
-			case "break":
-				nextString = handleBreakStatement(br);
-				break;
-			case "continue":
-				nextString = handleContinueStatement(br);
-				break;
-			case "return":
-				nextString = handleReturnStatement(br);
-				break;
-			default:
-				nextString = handleStatementExpression(br, nextString);
+		if(nextString.equals(";")) {
+			outputSB.append(nextString);
+			nextString = getNextToken(br);
+		}
+		else if(nextString.equals("if")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleIfStatement(br);
+		}
+		else if(nextString.equals("while")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleWhileStatement(br);
+		}
+		else if(nextString.equals("do")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleDoStatement(br);
+		}
+		else if(nextString.equals("for")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleForStatement(br);
+		}
+		else if(nextString.equals("break")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleBreakStatement(br);
+		}
+		else if(nextString.equals("continue")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleContinueStatement(br);
+		}
+		else if(nextString.equals("return")) {
+			outputSB.append("<font color=\"purple\">" + nextString + "</font>");
+			nextString = handleReturnStatement(br);
+		}
+		else {
+			nextString = handleStatementExpression(br, nextString);
 		}
 		return nextString;
 	}
@@ -499,8 +462,10 @@ public class SyntaxParser {
 	private static String handleIfStatement(BufferedReader br) {
 		String nextString;
 		if((nextString = handleParExpression(br)) != null && nextString.equals(")")) {
+			outputSB.append(nextString);
 			if((nextString = parseStatementHandler(br, getNextToken(br))) != null && 
 					nextString.equals("else")) {
+				outputSB.append(nextString);
 				return parseStatementHandler(br, getNextToken(br));
 			}
 			else {
@@ -508,7 +473,7 @@ public class SyntaxParser {
 			}
 		}
 		else {
-			appendOutputString("Missing \')\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -516,10 +481,11 @@ public class SyntaxParser {
 	private static String handleParExpression(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals("(")) {
+			outputSB.append(nextString);
 			return parseExpression(br, getNextToken(br));
 		}
 		else {
-			appendOutputString("Missing '('\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -527,10 +493,11 @@ public class SyntaxParser {
 	private static String handleWhileStatement(BufferedReader br) {
 		String nextString;
 		if((nextString = handleParExpression(br)) != null && nextString.equals(")")) {
+			outputSB.append(nextString);
 			return parseStatementHandler(br, getNextToken(br));
 		}
 		else {
-			appendOutputString("Missing \')\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -539,22 +506,25 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = parseStatementHandler(br, getNextToken(br))) != null && 
 				nextString.equals("while")) {
+			outputSB.append(nextString);
 			if((nextString = handleParExpression(br)) != null && nextString.equals(")")) {
+				outputSB.append(nextString);
 				if((nextString = getNextToken(br)) != null && nextString.equals(";")) {
+					outputSB.append(nextString);
 					return getNextToken(br);
 				}
 				else {
-					appendOutputString("Missing \';\'\n");
+					outputSB.append("<font color=red>" + nextString + "</font>");
 					return null;
 				}
 			}
 			else {
-				appendOutputString("Missing \')\'\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Missing \')\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -562,10 +532,11 @@ public class SyntaxParser {
 	private static String handleForStatement(BufferedReader br) {
 		String nextString;
 		if((nextString = handleForControl(br)) != null && nextString.equals(")")) {
+			outputSB.append(nextString);
 			return parseStatementHandler(br, getNextToken(br));
 		}
 		else {
-			appendOutputString("Missing \')\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -573,24 +544,27 @@ public class SyntaxParser {
 	private static String handleForControl(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals("(")) {
+			outputSB.append(nextString);
 			if((nextString = parseExpression(br, getNextToken(br))) != null && 
 					nextString.equals(";")) {
+				outputSB.append(nextString);
 				if((nextString = parseExpression(br, getNextToken(br))) != null && 
 						nextString.equals(";")) {
+					outputSB.append(nextString);
 					return parseExpression(br, getNextToken(br));
 				}
 				else {
-					appendOutputString("Missing \';\'\n");
+					outputSB.append("<font color=red>" + nextString + "</font>");
 					return null;
 				}
 			}
 			else {
-				appendOutputString("Missing \';\'\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
 		else {
-			appendOutputString("Missing \'(\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -598,10 +572,11 @@ public class SyntaxParser {
 	private static String handleBreakStatement(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals(";")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \';\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -609,10 +584,11 @@ public class SyntaxParser {
 	private static String handleContinueStatement(BufferedReader br) {
 		String nextString;
 		if((nextString = getNextToken(br)) != null && nextString.equals(";")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \';\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -621,10 +597,11 @@ public class SyntaxParser {
 		String nextString;
 		if((nextString = parseExpression(br, getNextToken(br))) != null && 
 				nextString.equals(";")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \';\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -633,10 +610,11 @@ public class SyntaxParser {
 		String nextString = currString;
 		if((nextString = parseExpression(br, nextString)) != null && 
 				nextString.equals(";")) {
+			outputSB.append(nextString);
 			return getNextToken(br);
 		}
 		else {
-			appendOutputString("Missing \';\'\n");
+			outputSB.append("<font color=red>" + nextString + "</font>");
 			return null;
 		}
 	}
@@ -648,8 +626,8 @@ public class SyntaxParser {
 		}
 		
 		if(assignmentOpList.contains(nextString)) {
+			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) == null) {
-				appendOutputString("Expression not found after assignment operator\n");
 				return null;
 			}
 			return parseExpression2(br, nextString);
@@ -667,6 +645,7 @@ public class SyntaxParser {
 		
 		if(infixOpList.contains(nextString)) {
 			do {
+				outputSB.append(nextString);
 				if((nextString = getNextToken(br)) == null) {
 					return null;
 				}
@@ -675,12 +654,14 @@ public class SyntaxParser {
 			return nextString;
 		}
 		else if(nextString.equals("instanceof")) {
+			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) != null && 
 					basicTypeList.contains(nextString)) {
+				outputSB.append(nextString);
 				return getNextToken(br);
 			}
 			else {
-				appendOutputString("Type not found after instanceof\n");
+				outputSB.append("<font color=red>" + nextString + "</font>");
 				return null;
 			}
 		}
@@ -692,15 +673,16 @@ public class SyntaxParser {
 	private static String parseExpression3(BufferedReader br, String currString) {
 		String nextString = currString;
 		if(prefixOpList.contains(nextString) || basicTypeList.contains(nextString)) {
+			outputSB.append(nextString);
 			if((nextString = getNextToken(br)) == null) {
 				return null;
 			}
 			return parseExpression3(br, nextString);
 		}
 		
-		if(nextString != null && (Character.isAlphabetic(nextString.charAt(0)) ||
+		if(nextString != null && (Character.isLetter(nextString.charAt(0)) ||
 				Character.isDigit(nextString.charAt(0)))) {
-			VariableInfo.valueSB.append(nextString);
+			outputSB.append(nextString);
 			return handlePostExpression3(br);
 		}
 		else {
@@ -716,37 +698,29 @@ public class SyntaxParser {
 		
 		if(nextString.equals("[")) {
 			do {
+				outputSB.append(nextString);
 				nextString = handleCloseBracket2(br);
 			} while(nextString != null && nextString.equals("["));
 		}
 		
 		if(nextString.equals(".")) {
 			do {
+				outputSB.append(nextString);
 				if((nextString = getNextToken(br)) != null && 
-						(Character.isAlphabetic(nextString.charAt(0)))) {
-					VariableInfo.valueSB.append(nextString);
+						(Character.isLetter(nextString.charAt(0)))) {
+					outputSB.append(nextString);
 					nextString = getNextToken(br);
 				}
 			} while(nextString != null && nextString.equals("."));
 		}
 		
 		if(postfixOpList.contains(nextString)) {
+			outputSB.append(nextString);
 			nextString = getNextToken(br);
 		}
 		
 		return nextString;
 	}
-	
-	/*private static String getNextToken(BufferedReader br) {
-		if(sc.hasNext()) {
-			String nextString = sc.next();
-			System.out.println(nextString);
-			return nextString;
-		}
-		else {
-			return null;
-		}
-	}*/
 	
 	private static String getNextToken(BufferedReader br) {
 		StringBuilder sb = new StringBuilder();
@@ -764,12 +738,17 @@ public class SyntaxParser {
 				value = br.read();
 			}
 			
-			if(Character.isWhitespace(value)) {
+			if(Character.isWhitespace(value)) {				
 				try {
-		         while((value = br.read()) != -1 && 
-		         		Character.isWhitespace(value)) {
-		         	;
-		         }
+					do {
+		         	ch = (char)value;
+		         	if(ch == '\n') {
+		         		outputSB.append("<br />");
+		         	}
+		         	else {
+		         		outputSB.append((char)value);
+		         	}
+		         } while((value = br.read()) != -1 && Character.isWhitespace(value));
 	         } catch (IOException e) {
 		         e.printStackTrace();
 	         }
@@ -805,15 +784,12 @@ public class SyntaxParser {
 						sb.append(ch);
 					}
 				}
+				currentChar = (char)value;
 			}
       } catch (IOException e) {
 	      e.printStackTrace();
       }
 		
 		return sb.toString();
-	}
-	
-	private static void appendOutputString(String s) {
-		outputSB.append(s);
 	}
 }
